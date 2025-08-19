@@ -3,4 +3,4 @@
 from langextract_anthropic.provider import AnthropicLanguageModel
 
 __all__ = ['AnthropicLanguageModel']
-__version__ = "0.1.0"
+__version__ = "0.1.1"
