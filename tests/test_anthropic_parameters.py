@@ -24,17 +24,14 @@ TEST_PARAMETERS = {
     'metadata': [
         {"user": "test-user"},
         {"request_id": "test-123", "session": "demo"},
-        {}  # Empty metadata
+        {},  # Empty metadata
     ],
     'system': [
         "You are a helpful assistant.",
         "Answer briefly and concisely.",
-        "You are a test assistant for parameter validation."
+        "You are a test assistant for parameter validation.",
     ],
-    'service_tier': [
-        "auto",
-        "standard_only"
-    ],
+    'service_tier': ["auto", "standard_only"],
 }
 
 # Parameters to skip (unsupported)
@@ -61,16 +58,14 @@ def test_parameter(param_name: str, param_value: Any, api_key: str) -> dict[str,
         'success': False,
         'error': None,
         'response_length': 0,
-        'api_called': False
+        'api_called': False,
     }
 
     try:
         # Create provider with the parameter
         kwargs = {param_name: param_value}
         provider = AnthropicLanguageModel(
-            model_id="anthropic-claude-3-5-sonnet-latest",
-            api_key=api_key,
-            **kwargs
+            model_id="anthropic-claude-3-5-sonnet-latest", api_key=api_key, **kwargs
         )
 
         # Test with a simple prompt

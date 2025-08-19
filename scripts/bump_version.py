@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Version bumping utility for langextract-azureopenai package.
+"""Version bumping utility for langextract-anthropic package.
 
 Usage:
     python scripts/bump_version.py patch   # 0.1.0 -> 0.1.1
@@ -77,7 +77,7 @@ def main():
 
     # File paths
     root_dir = Path(__file__).parent.parent
-    init_file = root_dir / "langextract_azureopenai" / "__init__.py"
+    init_file = root_dir / "langextract_anthropic" / "__init__.py"
     pyproject_file = root_dir / "pyproject.toml"
 
     # Get current version

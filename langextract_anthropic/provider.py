@@ -16,7 +16,7 @@ from langextract_anthropic.schema import AnthropicSchema
 _ANTHROPIC_CONFIG_KEYS: Final[set[str]] = {
     'max_tokens',  # Maximum number of tokens to generate (required)
     'temperature',  # Controls randomness (0-1)
-    'top_p',  # Nucleus sampling (0-1) 
+    'top_p',  # Nucleus sampling (0-1)
     'top_k',  # Top-k sampling (0 or positive integer)
     'stop_sequences',  # List of strings to stop generation
     'metadata',  # Metadata object for request tracking
@@ -147,14 +147,14 @@ class AnthropicLanguageModel(lx.inference.BaseLanguageModel):
                     'Return only a valid JSON object (no code fences or explanatory text).'
                 )
 
-            messages: list[dict[str, str]] = [
-                {'role': 'user', 'content': prompt}
-            ]
+            messages: list[dict[str, str]] = [{'role': 'user', 'content': prompt}]
 
             api_params: dict[str, Any] = {
                 'model': self.model_name,
                 'messages': messages,
-                'max_tokens': config.get('max_tokens', 1024),  # Anthropic requires max_tokens
+                'max_tokens': config.get(
+                    'max_tokens', 1024
+                ),  # Anthropic requires max_tokens
             }
 
             # Add system message if structured output is enabled

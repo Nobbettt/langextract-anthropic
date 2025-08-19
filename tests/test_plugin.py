@@ -123,7 +123,7 @@ try:
     with patch('anthropic.Anthropic'):
         provider = AnthropicLanguageModel(
             model_id=_example_id(PATTERNS[0]) if PATTERNS else "test-model",
-            api_key="test-key"
+            api_key="test-key",
         )
         provider.apply_schema(schema)
         print(

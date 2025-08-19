@@ -40,7 +40,9 @@ class TestAnthropicProvider:
 
     def test_provider_initialization_missing_api_key(self):
         """Test provider fails without API key."""
-        with pytest.raises(lx.exceptions.InferenceConfigError, match="API key not provided"):
+        with pytest.raises(
+            lx.exceptions.InferenceConfigError, match="API key not provided"
+        ):
             AnthropicLanguageModel(
                 model_id="anthropic-claude-3-5-sonnet-latest",
             )
@@ -52,12 +54,9 @@ class TestAnthropicProvider:
         for param in unsupported_params:
             with pytest.raises(
                 lx.exceptions.InferenceConfigError,
-                match=f"Unsupported parameter provided: {param}"
+                match=f"Unsupported parameter provided: {param}",
             ):
-                AnthropicLanguageModel(
-                    api_key="test-key",
-                    **{param: True}
-                )
+                AnthropicLanguageModel(api_key="test-key", **{param: True})
 
     def test_schema_class_support(self, mock_anthropic_client):
         """Test provider returns correct schema class."""
@@ -87,21 +86,18 @@ class TestAnthropicProvider:
             "top_p": 0.9,
             "top_k": 50,
             "stop_sequences": ["STOP"],
-            "metadata": {"user": "test"}
+            "metadata": {"user": "test"},
         }
-        invalid_params = {
-            "invalid_param": "value",
-            "another_invalid": 123
-        }
+        invalid_params = {"invalid_param": "value", "another_invalid": 123}
 
         provider = AnthropicLanguageModel(
-            api_key="test-key",
-            **valid_params,
-            **invalid_params
+            api_key="test-key", **valid_params, **invalid_params
         )
 
         # Only valid parameters should be stored (temperature is stored separately)
-        expected_extra_kwargs_count = len(valid_params) - 1  # temperature is not in _extra_kwargs
+        expected_extra_kwargs_count = (
+            len(valid_params) - 1
+        )  # temperature is not in _extra_kwargs
         assert len(provider._extra_kwargs) == expected_extra_kwargs_count
 
         # Temperature is stored as instance variable
@@ -119,10 +115,7 @@ class TestAnthropicProvider:
 
     def test_max_workers_setting(self, mock_anthropic_client):
         """Test max_workers parameter is set correctly."""
-        provider = AnthropicLanguageModel(
-            api_key="test-key",
-            max_workers=5
-        )
+        provider = AnthropicLanguageModel(api_key="test-key", max_workers=5)
         assert provider.max_workers == 5
 
         # Test default value

@@ -28,7 +28,6 @@ def test_parameter_filtering():
         'top_k': 50,
         'stop_sequences': ["\n", "STOP"],
         'metadata': {"user": "test-user"},
-
         # Invalid parameters (should be dropped)
         'invalid_param': 'should_be_ignored',
         'not_supported': 42,
@@ -40,13 +39,12 @@ def test_parameter_filtering():
         mock_anthropic.return_value = mock_client
 
         # Initialize provider
-        provider = AnthropicLanguageModel(
-            api_key='test-key',
-            **test_kwargs
-        )
+        provider = AnthropicLanguageModel(api_key='test-key', **test_kwargs)
 
         # Check filtering in _extra_kwargs
-        expected_valid_count = 5  # Only valid params from test_kwargs (temperature is special)
+        expected_valid_count = (
+            5  # Only valid params from test_kwargs (temperature is special)
+        )
         assert len(provider._extra_kwargs) == expected_valid_count
 
         # Verify valid parameters are stored (temperature is stored separately)
@@ -76,12 +74,9 @@ def test_unsupported_parameters_rejected():
         for param_name, param_value in unsupported_params.items():
             with pytest.raises(
                 lx.exceptions.InferenceConfigError,
-                match=f"Unsupported parameter provided: {param_name}"
+                match=f"Unsupported parameter provided: {param_name}",
             ):
-                AnthropicLanguageModel(
-                    api_key='test-key',
-                    **{param_name: param_value}
-                )
+                AnthropicLanguageModel(api_key='test-key', **{param_name: param_value})
 
 
 @pytest.mark.unit
@@ -112,11 +107,13 @@ def test_api_call_parameter_passing():
 
         # Make a test inference call
         prompts = ["Test prompt"]
-        list(provider.infer(
-            prompts,
-            stop_sequences=["STOP", "END"],
-            metadata={"request_id": "test-123"}
-        ))
+        list(
+            provider.infer(
+                prompts,
+                stop_sequences=["STOP", "END"],
+                metadata={"request_id": "test-123"},
+            )
+        )
 
         # Verify API call was made with correct parameters
         assert mock_client.messages.create.called
@@ -160,10 +157,7 @@ def test_system_message_parameter():
 
         # Test with system message parameter
         prompts = ["Test prompt"]
-        list(provider.infer(
-            prompts,
-            system="You are a helpful assistant for testing."
-        ))
+        list(provider.infer(prompts, system="You are a helpful assistant for testing."))
 
         # Verify system message was passed
         call_args = mock_client.messages.create.call_args.kwargs
@@ -190,10 +184,7 @@ def test_service_tier_parameter():
 
         # Test with service_tier parameter
         prompts = ["Test prompt"]
-        list(provider.infer(
-            prompts,
-            service_tier="standard_only"
-        ))
+        list(provider.infer(prompts, service_tier="standard_only"))
 
         # Verify service_tier was passed
         call_args = mock_client.messages.create.call_args.kwargs
@@ -212,7 +203,7 @@ def test_config_keys_completeness():
         'metadata',
         'system',
         'stream',  # Unsupported but listed
-        'tools',   # Unsupported but listed
+        'tools',  # Unsupported but listed
         'tool_choice',  # Unsupported but listed
         'service_tier',  # New parameter
         'thinking',  # Unsupported but listed
@@ -237,12 +228,9 @@ def test_runtime_parameter_rejection():
         for param in unsupported_runtime_params:
             with pytest.raises(
                 lx.exceptions.InferenceConfigError,
-                match=f"Unsupported parameter provided: {param}"
+                match=f"Unsupported parameter provided: {param}",
             ):
-                list(provider.infer(
-                    ["test prompt"],
-                    **{param: True}
-                ))
+                list(provider.infer(["test prompt"], **{param: True}))
 
 
 if __name__ == '__main__':

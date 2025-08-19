@@ -141,7 +141,7 @@ def main():
     if choice in ['1', '2', '3']:
         print("\n📝 Committing version changes...")
         run_command(
-            "git add pyproject.toml langextract_azureopenai/__init__.py",
+            "git add pyproject.toml langextract_anthropic/__init__.py",
             "Staging version files",
         )
         run_command(

@@ -95,9 +95,7 @@ def main():
         results.append(run_command(integ_cmd, "Anthropic API parameter tests"))
     else:
         print("\n⚠️  No Anthropic API key found - skipping integration tests")
-        print(
-            "   Set ANTHROPIC_API_KEY environment variable to run them"
-        )
+        print("   Set ANTHROPIC_API_KEY environment variable to run them")
 
     # 7. Coverage report
     cov_cmd = (

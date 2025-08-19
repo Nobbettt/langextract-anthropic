@@ -89,7 +89,7 @@ def main():
             sys.exit(1)
 
         # Test import
-        test_import_cmd = f"{venv_path}/bin/python -c 'import langextract_azureopenai; print(f\"Version: {{langextract_azureopenai.__version__}}\")'"
+        test_import_cmd = f"{venv_path}/bin/python -c 'import langextract_anthropic; print(f\"Version: {{langextract_anthropic.__version__}}\")'"
         if not run_command(test_import_cmd, "Testing package import"):
             print("❌ Failed to import package!")
             sys.exit(1)
