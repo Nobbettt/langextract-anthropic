@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build validation script for langextract-azureopenai package."""
+"""Build validation script for langextract-anthropic package."""
 
 import shutil
 import subprocess
@@ -25,7 +25,7 @@ def run_command(cmd, description, check=True):
 
 def main():
     """Run build validation checks."""
-    print("🚀 LangExtract Azure OpenAI - Build Validation")
+    print("🚀 LangExtract Anthropic - Build Validation")
     print("=" * 50)
 
     # Check UV is available

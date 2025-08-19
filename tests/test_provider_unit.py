@@ -1,213 +1,130 @@
-"""Unit tests for Azure OpenAI provider."""
+"""Unit tests for Anthropic provider."""
 
 import langextract as lx
 import pytest
 
-from langextract_azureopenai import AzureOpenAILanguageModel
-from langextract_azureopenai.schema import AzureOpenAISchema
+from langextract_anthropic import AnthropicLanguageModel
+from langextract_anthropic.schema import AnthropicSchema
 
 
 @pytest.mark.unit
-class TestAzureOpenAIProvider:
-    """Test Azure OpenAI provider functionality."""
+class TestAnthropicProvider:
+    """Test Anthropic provider functionality."""
 
-    def test_provider_initialization(self, mock_azure_credentials, mock_openai_client):
+    def test_provider_initialization(self, mock_anthropic_client):
         """Test provider can be initialized with valid credentials."""
-        provider = AzureOpenAILanguageModel(
-            model_id="azureopenai-gpt-4",
+        provider = AnthropicLanguageModel(
+            model_id="anthropic-claude-3-5-sonnet-latest",
             api_key="test-key",
-            azure_endpoint="https://test.openai.azure.com/",
         )
 
-        assert provider.model_id == "azureopenai-gpt-4"
-        assert provider.deployment_name == "gpt-4"
+        assert provider.model_id == "anthropic-claude-3-5-sonnet-latest"
+        assert provider.model_name == "claude-3-5-sonnet-latest"
         assert provider.api_key == "test-key"
-        assert provider.azure_endpoint == "https://test.openai.azure.com/"
 
-    def test_deployment_name_extraction(
-        self, mock_azure_credentials, mock_openai_client
-    ):
-        """Test deployment name is correctly extracted from model ID."""
+    def test_model_name_extraction(self, mock_anthropic_client):
+        """Test model name is correctly extracted from model ID."""
         test_cases = [
-            ("azureopenai-gpt-4", "gpt-4"),
-            ("azureopenai-gpt-35-turbo", "gpt-35-turbo"),
-            ("azureopenai-custom-model", "custom-model"),
-            ("direct-deployment", "direct-deployment"),  # No prefix
+            ("anthropic-claude-3-5-sonnet-latest", "claude-3-5-sonnet-latest"),
+            ("anthropic-claude-3-opus-latest", "claude-3-opus-latest"),
+            ("claude-3-haiku-latest", "claude-3-haiku-latest"),  # Direct model name
+            (None, "claude-3-5-sonnet-latest"),  # Default
         ]
 
-        for model_id, expected_deployment in test_cases:
-            provider = AzureOpenAILanguageModel(
+        for model_id, expected_name in test_cases:
+            provider = AnthropicLanguageModel(
                 model_id=model_id,
                 api_key="test-key",
-                azure_endpoint="https://test.openai.azure.com/",
             )
-            assert provider.deployment_name == expected_deployment
+            assert provider.model_name == expected_name
 
-    def test_parameter_filtering(self, mock_azure_credentials, mock_openai_client):
-        """Test that parameter filtering works correctly."""
-        # Valid and invalid parameters
-        kwargs = {
-            'frequency_penalty': 0.5,  # Valid
-            'presence_penalty': 0.3,  # Valid
-            'invalid_param': 'test',  # Invalid - should be filtered
-            'malicious_code': 'rm -rf /',  # Invalid - should be filtered
+    def test_provider_initialization_missing_api_key(self):
+        """Test provider fails without API key."""
+        with pytest.raises(lx.exceptions.InferenceConfigError, match="API key not provided"):
+            AnthropicLanguageModel(
+                model_id="anthropic-claude-3-5-sonnet-latest",
+            )
+
+    def test_unsupported_parameters_rejected(self, mock_anthropic_client):
+        """Test that unsupported parameters are rejected at initialization."""
+        unsupported_params = ["stream", "tools", "tool_choice", "thinking"]
+
+        for param in unsupported_params:
+            with pytest.raises(
+                lx.exceptions.InferenceConfigError,
+                match=f"Unsupported parameter provided: {param}"
+            ):
+                AnthropicLanguageModel(
+                    api_key="test-key",
+                    **{param: True}
+                )
+
+    def test_schema_class_support(self, mock_anthropic_client):
+        """Test provider returns correct schema class."""
+        provider = AnthropicLanguageModel(api_key="test-key")
+        assert provider.get_schema_class() == AnthropicSchema
+
+    def test_apply_schema(self, mock_anthropic_client):
+        """Test schema application."""
+        provider = AnthropicLanguageModel(api_key="test-key")
+
+        # Test with None schema
+        provider.apply_schema(None)
+        assert provider._response_schema is None
+        assert provider._enable_structured_output is False
+
+        # Test with Anthropic schema
+        schema = AnthropicSchema({"type": "object"})
+        provider.apply_schema(schema)
+        assert provider._response_schema is not None
+        assert provider._enable_structured_output is True
+
+    def test_parameter_filtering(self, mock_anthropic_client):
+        """Test that only whitelisted parameters are stored."""
+        valid_params = {
+            "max_tokens": 1000,
+            "temperature": 0.5,
+            "top_p": 0.9,
+            "top_k": 50,
+            "stop_sequences": ["STOP"],
+            "metadata": {"user": "test"}
+        }
+        invalid_params = {
+            "invalid_param": "value",
+            "another_invalid": 123
         }
 
-        provider = AzureOpenAILanguageModel(
-            model_id="azureopenai-gpt-4",
+        provider = AnthropicLanguageModel(
             api_key="test-key",
-            azure_endpoint="https://test.openai.azure.com/",
-            **kwargs,
+            **valid_params,
+            **invalid_params
         )
 
-        # Check that valid parameters are stored
-        assert 'frequency_penalty' in provider._extra_kwargs
-        assert 'presence_penalty' in provider._extra_kwargs
-        assert provider._extra_kwargs['frequency_penalty'] == 0.5
-        assert provider._extra_kwargs['presence_penalty'] == 0.3
+        # Only valid parameters should be stored (temperature is stored separately)
+        expected_extra_kwargs_count = len(valid_params) - 1  # temperature is not in _extra_kwargs
+        assert len(provider._extra_kwargs) == expected_extra_kwargs_count
 
-        # Check that invalid parameters are filtered out
-        assert 'invalid_param' not in provider._extra_kwargs
-        assert 'malicious_code' not in provider._extra_kwargs
+        # Temperature is stored as instance variable
+        assert provider.temperature == valid_params["temperature"]
 
-    def test_schema_support(
-        self, mock_azure_credentials, mock_openai_client, sample_extraction_examples
-    ):
-        """Test schema creation and application."""
-        provider = AzureOpenAILanguageModel(
-            model_id="azureopenai-gpt-4",
+        # Other valid parameters are stored in _extra_kwargs
+        for key, value in valid_params.items():
+            if key == "temperature":
+                continue  # Skip temperature, already checked above
+            assert provider._extra_kwargs[key] == value
+
+        # Invalid parameters should not be stored
+        for key in invalid_params:
+            assert key not in provider._extra_kwargs
+
+    def test_max_workers_setting(self, mock_anthropic_client):
+        """Test max_workers parameter is set correctly."""
+        provider = AnthropicLanguageModel(
             api_key="test-key",
-            azure_endpoint="https://test.openai.azure.com/",
+            max_workers=5
         )
+        assert provider.max_workers == 5
 
-        # Test schema class
-        schema_class = provider.get_schema_class()
-        assert schema_class == AzureOpenAISchema
-
-        # Test schema creation from examples
-        schema = AzureOpenAISchema.from_examples(sample_extraction_examples)
-        assert schema.schema_dict is not None
-        assert 'type' in schema.schema_dict
-        assert 'properties' in schema.schema_dict
-
-        # Test schema application
-        provider.apply_schema(schema)
-        # Schema should be stored in base class
-        assert provider._schema == schema
-        # When schema is applied, provider should enable structured output mode
-        assert getattr(provider, '_enable_structured_output', False) is True
-
-    def test_inference_basic(self, mock_azure_credentials, mock_openai_client):
-        """Test basic inference functionality."""
-        provider = AzureOpenAILanguageModel(
-            model_id="azureopenai-gpt-4",
-            api_key="test-key",
-            azure_endpoint="https://test.openai.azure.com/",
-        )
-
-        prompts = ["Test prompt"]
-        results = list(provider.infer(prompts))
-
-        assert len(results) == 1
-        assert len(results[0]) == 1
-        assert results[0][0].output == "Mock response content"
-        assert results[0][0].score == 1.0
-
-        # Verify API was called correctly
-        mock_openai_client.chat.completions.create.assert_called_once()
-        call_kwargs = mock_openai_client.chat.completions.create.call_args[1]
-        assert call_kwargs['model'] == 'gpt-4'  # deployment name
-        assert call_kwargs['messages'] == [{'role': 'user', 'content': 'Test prompt'}]
-
-    def test_inference_with_parameters(
-        self, mock_azure_credentials, mock_openai_client
-    ):
-        """Test inference with various parameters."""
-        provider = AzureOpenAILanguageModel(
-            model_id="azureopenai-gpt-4",
-            api_key="test-key",
-            azure_endpoint="https://test.openai.azure.com/",
-        )
-
-        prompts = ["Test prompt"]
-        results = list(
-            provider.infer(
-                prompts,
-                temperature=0.7,
-                top_p=0.9,
-                frequency_penalty=0.1,
-                presence_penalty=0.1,
-                max_completion_tokens=100,
-            )
-        )
-
-        assert len(results) == 1
-
-        # Check that parameters were passed to API
-        call_kwargs = mock_openai_client.chat.completions.create.call_args[1]
-        assert call_kwargs['temperature'] == 0.7
-        assert call_kwargs['top_p'] == 0.9
-        assert call_kwargs['frequency_penalty'] == 0.1
-        assert call_kwargs['presence_penalty'] == 0.1
-        assert call_kwargs['max_completion_tokens'] == 100
-
-    def test_unsupported_parameters_raise(
-        self, mock_azure_credentials, mock_openai_client
-    ):
-        """Unsupported parameters should raise InferenceConfigError."""
-        # Unsupported at construction
-        with pytest.raises(lx.exceptions.InferenceConfigError):
-            AzureOpenAILanguageModel(
-                model_id="azureopenai-gpt-4",
-                api_key="test-key",
-                azure_endpoint="https://test.openai.azure.com/",
-                stream=True,
-            )
-
-        # Unsupported at inference time
-        provider = AzureOpenAILanguageModel(
-            model_id="azureopenai-gpt-4",
-            api_key="test-key",
-            azure_endpoint="https://test.openai.azure.com/",
-        )
-        with pytest.raises(lx.exceptions.InferenceConfigError):
-            list(provider.infer(["hello"], stream=True))
-
-    def test_missing_credentials_error(self):
-        """Test that missing credentials raise appropriate errors."""
-        # Ensure env does not accidentally satisfy credentials for this test
-        from unittest.mock import patch
-
-        with patch.dict(
-            'os.environ',
-            {
-                'AZURE_OPENAI_API_KEY': '',
-                'AZURE_OPENAI_API_VERSION': '',
-            },
-            clear=False,
-        ):
-            with pytest.raises(
-                lx.exceptions.InferenceConfigError, match="API key not provided"
-            ):
-                AzureOpenAILanguageModel(
-                    model_id="azureopenai-gpt-4",
-                    azure_endpoint="https://test.openai.azure.com/",
-                    # Missing api_key
-                )
-
-        with patch.dict(
-            'os.environ',
-            {
-                'AZURE_OPENAI_ENDPOINT': '',
-                'AZURE_OPENAI_API_VERSION': '',
-            },
-            clear=False,
-        ):
-            with pytest.raises(
-                lx.exceptions.InferenceConfigError, match="endpoint not provided"
-            ):
-                AzureOpenAILanguageModel(
-                    model_id="azureopenai-gpt-4",
-                    api_key="test-key",
-                    # Missing azure_endpoint
-                )
+        # Test default value
+        provider_default = AnthropicLanguageModel(api_key="test-key")
+        assert provider_default.max_workers == 10

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Comprehensive test runner for langextract-azureopenai package."""
+"""Comprehensive test runner for langextract-anthropic package."""
 
 import os
 import shutil
@@ -28,7 +28,7 @@ def run_command(cmd, description):
 
 def main():
     """Run comprehensive test suite."""
-    print("🧪 LangExtract Azure OpenAI - Test Suite")
+    print("🧪 LangExtract Anthropic - Test Suite")
     print("=" * 60)
     results = []
 
@@ -66,9 +66,9 @@ def main():
 
     # 3. Type checking
     mypy_cmd = (
-        "uv run mypy langextract_azureopenai"
+        "uv run mypy langextract_anthropic"
         if has_uv
-        else f"{py} -m mypy langextract_azureopenai"
+        else f"{py} -m mypy langextract_anthropic"
     )
     results.append(run_command(mypy_cmd, "Type checking (mypy)"))
 
@@ -83,31 +83,27 @@ def main():
     # 5. Parameter filtering tests are included in unit tests via markers; no separate run
 
     # 6. Integration tests (only if credentials are available)
-    has_credentials = (
-        os.getenv("AZURE_OPENAI_API_KEY")
-        and os.getenv("AZURE_OPENAI_ENDPOINT")
-        and os.getenv("AZURE_OPENAI_API_VERSION")
-    )
+    has_credentials = bool(os.getenv("ANTHROPIC_API_KEY"))
 
     if has_credentials:
-        print("\n🔐 Azure credentials found - running integration tests")
+        print("\n🔐 Anthropic API key found - running integration tests")
         integ_cmd = (
-            "uv run python tests/test_azure_parameters.py"
+            "uv run python tests/test_anthropic_parameters.py"
             if has_uv
-            else f"{py} tests/test_azure_parameters.py"
+            else f"{py} tests/test_anthropic_parameters.py"
         )
-        results.append(run_command(integ_cmd, "Azure API parameter tests"))
+        results.append(run_command(integ_cmd, "Anthropic API parameter tests"))
     else:
-        print("\n⚠️  No Azure credentials found - skipping integration tests")
+        print("\n⚠️  No Anthropic API key found - skipping integration tests")
         print(
-            "   Set AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and AZURE_OPENAI_API_VERSION to run them"
+            "   Set ANTHROPIC_API_KEY environment variable to run them"
         )
 
     # 7. Coverage report
     cov_cmd = (
-        "uv run pytest tests/ --cov=langextract_azureopenai --cov-report=term-missing --cov-report=html"
+        "uv run pytest tests/ --cov=langextract_anthropic --cov-report=term-missing --cov-report=html"
         if has_uv
-        else f"{py} -m pytest tests/ --cov=langextract_azureopenai --cov-report=term-missing --cov-report=html"
+        else f"{py} -m pytest tests/ --cov=langextract_anthropic --cov-report=term-missing --cov-report=html"
     )
     results.append(run_command(cov_cmd, "Coverage analysis"))
 

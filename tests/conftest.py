@@ -1,50 +1,49 @@
-"""Pytest configuration and fixtures for langextract-azureopenai tests.
+"""Pytest configuration and fixtures for langextract-anthropic tests.
 
 Notes:
-- `tests/test_azure_parameters.py` is a script-style integration validator that is
-  executed directly (e.g., via `python tests/test_azure_parameters.py`) when you
-  have real Azure credentials. It is not a pytest test module and should be
+- `tests/test_anthropic_parameters.py` is a script-style integration validator that is
+  executed directly (e.g., via `python tests/test_anthropic_parameters.py`) when you
+  have real Anthropic credentials. It is not a pytest test module and should be
   excluded from pytest collection to avoid fixture resolution errors.
 """
 
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 # Exclude the script-style integration validator from pytest collection. This
 # prevents errors like "fixture 'param_name' not found" during unit test runs.
-# It remains executable directly via `python tests/test_azure_parameters.py`.
-collect_ignore = ["test_azure_parameters.py"]
+# It remains executable directly via `python tests/test_anthropic_parameters.py`.
+collect_ignore = ["test_anthropic_parameters.py"]
 
 
 @pytest.fixture
-def mock_azure_credentials():
-    """Mock Azure OpenAI credentials for testing."""
+def mock_anthropic_credentials():
+    """Mock Anthropic credentials for testing."""
     with patch.dict(
         os.environ,
         {
-            'AZURE_OPENAI_API_KEY': 'test-api-key',
-            'AZURE_OPENAI_ENDPOINT': 'https://test.openai.azure.com/',
-            'AZURE_OPENAI_API_VERSION': '2024-12-01-preview',
+            'ANTHROPIC_API_KEY': 'test-api-key',
         },
     ):
         yield
 
 
 @pytest.fixture
-def mock_openai_client():
-    """Mock the AzureOpenAI client to avoid real API calls."""
-    with patch('openai.AzureOpenAI') as mock_client_class:
+def mock_anthropic_client():
+    """Mock the Anthropic client to avoid real API calls."""
+    with patch('anthropic.Anthropic') as mock_client_class:
         mock_client = mock_client_class.return_value
 
-        # Mock successful response
-        mock_response = type('MockResponse', (), {})()
-        mock_response.choices = [type('MockChoice', (), {})()]
-        mock_response.choices[0].message = type('MockMessage', (), {})()
-        mock_response.choices[0].message.content = "Mock response content"
+        # Mock successful response with content blocks
+        mock_content_block = MagicMock()
+        mock_content_block.text = '{"extractions": []}'
 
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_response = MagicMock()
+        mock_response.content = [mock_content_block]
+
+        mock_client.messages.create.return_value = mock_response
         yield mock_client
 
 

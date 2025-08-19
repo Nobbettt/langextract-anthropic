@@ -45,13 +45,13 @@ jobs:
       with:
         name: Release ${{ steps.extract_version.outputs.VERSION }}
         body: |
-          ## LangExtract Azure OpenAI Provider v${{ steps.extract_version.outputs.VERSION }}
+          ## LangExtract Anthropic Provider v${{ steps.extract_version.outputs.VERSION }}
           
           ### Installation
           ```bash
-          uv add langextract-azureopenai==${{ steps.extract_version.outputs.VERSION }}
+          uv add langextract-anthropic==${{ steps.extract_version.outputs.VERSION }}
           # or
-          pip install langextract-azureopenai==${{ steps.extract_version.outputs.VERSION }}
+          pip install langextract-anthropic==${{ steps.extract_version.outputs.VERSION }}
           ```
           
           ### What's Changed

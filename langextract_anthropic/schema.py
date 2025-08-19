@@ -1,4 +1,4 @@
-"""Schema implementation for AzureOpenAI provider."""
+"""Schema implementation for Anthropic provider."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from typing import Any
 import langextract as lx  # type: ignore[import-untyped]
 
 
-class AzureOpenAISchema(lx.schema.BaseSchema):
-    """Schema implementation for AzureOpenAI structured output."""
+class AnthropicSchema(lx.schema.BaseSchema):
+    """Schema implementation for Anthropic structured output."""
 
     def __init__(self, schema_dict: dict[str, Any]) -> None:
         """Initialize the schema with a dictionary."""
@@ -23,7 +23,7 @@ class AzureOpenAISchema(lx.schema.BaseSchema):
     @classmethod
     def from_examples(
         cls, examples_data: Sequence[Any], attribute_suffix: str = "_attributes"
-    ) -> AzureOpenAISchema:
+    ) -> AnthropicSchema:
         """Build schema from example extractions.
 
         Args:
@@ -31,7 +31,7 @@ class AzureOpenAISchema(lx.schema.BaseSchema):
             attribute_suffix: Suffix for attribute fields.
 
         Returns:
-            A configured AzureOpenAISchema instance.
+            A configured AnthropicSchema instance.
         """
         extraction_types: dict[str, set[str]] = {}
         for example in examples_data:
@@ -72,7 +72,7 @@ class AzureOpenAISchema(lx.schema.BaseSchema):
         Returns:
             True if the provider enforces valid JSON output (no code fences).
         """
-        # When this schema is applied, the provider enables JSON mode
-        # (`response_format={'type': 'json_object'}`), which returns
+        # Anthropic Claude models support structured output through
+        # proper prompting and JSON formatting, which returns
         # well-formed JSON without markdown fencing.
         return True

@@ -1,11 +1,11 @@
-# Makefile for LangExtract Azure OpenAI Provider
+# Makefile for LangExtract Anthropic Provider
 
 .PHONY: help install install-dev clean lint format test test-unit test-integration test-coverage build check-build release
 
 # Default target
 help:
-	@echo "LangExtract Azure OpenAI Provider - Development Commands"
-	@echo "======================================================="
+	@echo "LangExtract Anthropic Provider - Development Commands"
+	@echo "===================================================="
 	@echo ""
 	@echo "Setup Commands:"
 	@echo "  install      Install package using UV"
@@ -20,7 +20,7 @@ help:
 	@echo "Testing Commands:"
 	@echo "  test         Run comprehensive test suite"
 	@echo "  test-unit    Run unit tests only"
-	@echo "  test-integration  Run Azure API integration tests"
+	@echo "  test-integration  Run Anthropic API integration tests"
 	@echo "  test-coverage     Run tests with coverage report"
 	@echo ""
 	@echo "Build Commands:"
@@ -56,7 +56,7 @@ lint:
 	uv run ruff check .
 
 typecheck:
-	uv run mypy langextract_azureopenai
+	uv run mypy langextract_anthropic
 
 # Testing commands
 test:
@@ -66,14 +66,14 @@ test-unit:
 	uv run pytest tests/test_provider_unit.py -v
 
 test-integration:
-	@if [ -z "$$AZURE_OPENAI_API_KEY" ] || [ -z "$$AZURE_OPENAI_ENDPOINT" ]; then \
-		echo "⚠️  Set AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT to run integration tests"; \
+	@if [ -z "$$ANTHROPIC_API_KEY" ]; then \
+		echo "⚠️  Set ANTHROPIC_API_KEY to run integration tests"; \
 		exit 1; \
 	fi
-	uv run python tests/test_azure_parameters.py
+	uv run python tests/test_anthropic_parameters.py
 
 test-coverage:
-	uv run pytest tests/ --cov=langextract_azureopenai --cov-report=html --cov-report=term-missing
+	uv run pytest tests/ --cov=langextract_anthropic --cov-report=html --cov-report=term-missing
 
 # Build commands
 build: clean

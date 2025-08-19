@@ -11,12 +11,12 @@ def test_hello_world():
 
 @pytest.mark.unit
 def test_import_provider():
-    """Test that we can import the Azure OpenAI provider."""
-    from langextract_azureopenai.provider import AzureOpenAILanguageModel
+    """Test that we can import the Anthropic provider."""
+    from langextract_anthropic.provider import AnthropicLanguageModel
 
     # Test that the class exists and has expected attributes
-    assert hasattr(AzureOpenAILanguageModel, 'infer')
-    assert hasattr(AzureOpenAILanguageModel, 'get_schema_class')
+    assert hasattr(AnthropicLanguageModel, 'infer')
+    assert hasattr(AnthropicLanguageModel, 'get_schema_class')
 
 
 @pytest.mark.unit
@@ -26,5 +26,5 @@ def test_provider_registration():
     from langextract.providers import registry
 
     lx.providers.load_plugins_once()
-    provider_class = registry.resolve('azureopenai-test')
-    assert provider_class.__name__ == 'AzureOpenAILanguageModel'
+    provider_class = registry.resolve('anthropic-test')
+    assert provider_class.__name__ == 'AnthropicLanguageModel'

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test script for AzureOpenAI provider (Step 5 checklist)."""
+"""Test script for Anthropic provider (Step 5 checklist)."""
 
 import re
 import sys
@@ -8,15 +8,15 @@ import langextract as lx
 from langextract.providers import registry
 
 try:
-    from langextract_azureopenai import AzureOpenAILanguageModel
+    from langextract_anthropic import AnthropicLanguageModel
 except ImportError:
     print("ERROR: Plugin not installed. Run: pip install -e .")
     sys.exit(1)
 
 lx.providers.load_plugins_once()
 
-PROVIDER_CLS_NAME = "AzureOpenAILanguageModel"
-PATTERNS = ['^azureopenai']
+PROVIDER_CLS_NAME = "AnthropicLanguageModel"
+PATTERNS = ['^anthropic']
 
 
 def _example_id(pattern: str) -> str:
@@ -30,7 +30,7 @@ def _example_id(pattern: str) -> str:
 sample_ids = [_example_id(p) for p in PATTERNS]
 sample_ids.append("unknown-model")
 
-print("Testing AzureOpenAI Provider - Step 5 Checklist:")
+print("Testing Anthropic Provider - Step 5 Checklist:")
 print("-" * 50)
 
 # 1 & 2. Provider registration + pattern matching via resolve()
@@ -58,33 +58,48 @@ for model_id in sample_ids:
         else:
             print(f"   ✗ {model_id}: resolve() failed: {e}")
 
-# 3. Inference sanity check
+# 3. Inference sanity check (with mocked client)
 print("\n3. Test inference with sample prompts")
 try:
-    model_id = (
-        sample_ids[0]
-        if sample_ids[0] != "unknown-model"
-        else (_example_id(PATTERNS[0]) if PATTERNS else "test-model")
-    )
-    provider = AzureOpenAILanguageModel(model_id=model_id)
-    prompts = ["Test prompt 1", "Test prompt 2"]
-    results = list(provider.infer(prompts))
-    print(f"   ✓ Inference returned {len(results)} results")
-    for i, result in enumerate(results):
-        try:
-            out = result[0].output if result and result[0] else None
-            print(f"   ✓ Result {i+1}: {(out or '')[:60]}...")
-        except Exception:
-            print(f"   ✗ Result {i+1}: Unexpected result shape: {result}")
+    from unittest.mock import MagicMock, patch
+
+    # Mock the Anthropic client
+    mock_content_block = MagicMock()
+    mock_content_block.text = "Mock response content"
+
+    mock_response = MagicMock()
+    mock_response.content = [mock_content_block]
+
+    with patch('anthropic.Anthropic') as mock_anthropic_class:
+        mock_client = mock_anthropic_class.return_value
+        mock_client.messages.create.return_value = mock_response
+
+        model_id = (
+            sample_ids[0]
+            if sample_ids[0] != "unknown-model"
+            else (_example_id(PATTERNS[0]) if PATTERNS else "test-model")
+        )
+        provider = AnthropicLanguageModel(model_id=model_id, api_key="test-key")
+        prompts = ["Test prompt 1", "Test prompt 2"]
+        results = list(provider.infer(prompts))
+        print(f"   ✓ Inference returned {len(results)} results")
+        for i, result in enumerate(results):
+            try:
+                out = result[0].output if result and result[0] else None
+                print(f"   ✓ Result {i+1}: {(out or '')[:60]}...")
+            except Exception:
+                print(f"   ✗ Result {i+1}: Unexpected result shape: {result}")
 except Exception as e:
     print(f"   ✗ ERROR: {e}")
 
 # 4. Test schema creation and application
 print("\n4. Test schema creation and application")
 try:
+    from unittest.mock import patch
+
     from langextract import data
 
-    from langextract_azureopenai.schema import AzureOpenAISchema
+    from langextract_anthropic.schema import AnthropicSchema
 
     examples = [
         data.ExampleData(
@@ -99,33 +114,38 @@ try:
         )
     ]
 
-    schema = AzureOpenAISchema.from_examples(examples)
+    schema = AnthropicSchema.from_examples(examples)
     print(f"   ✓ Schema created (keys={list(schema.schema_dict.keys())})")
 
-    schema_class = AzureOpenAILanguageModel.get_schema_class()
+    schema_class = AnthropicLanguageModel.get_schema_class()
     print(f"   ✓ Provider schema class: {schema_class.__name__}")
 
-    provider = AzureOpenAILanguageModel(
-        model_id=_example_id(PATTERNS[0]) if PATTERNS else "test-model"
-    )
-    provider.apply_schema(schema)
-    print(
-        f"   ✓ Schema applied: response_schema={provider.response_schema is not None} structured={getattr(provider, 'structured_output', False)}"
-    )
+    with patch('anthropic.Anthropic'):
+        provider = AnthropicLanguageModel(
+            model_id=_example_id(PATTERNS[0]) if PATTERNS else "test-model",
+            api_key="test-key"
+        )
+        provider.apply_schema(schema)
+        print(
+            f"   ✓ Schema applied: response_schema={provider._response_schema is not None} structured={provider._enable_structured_output}"
+        )
 except Exception as e:
     print(f"   ✗ ERROR: {e}")
 
 # 5. Test factory integration
 print("\n5. Test factory integration")
 try:
+    from unittest.mock import patch
+
     from langextract import factory
 
-    config = factory.ModelConfig(
-        model_id=_example_id(PATTERNS[0]) if PATTERNS else "test-model",
-        provider="AzureOpenAILanguageModel",
-    )
-    model = factory.create_model(config)
-    print(f"   ✓ Factory created: {type(model).__name__}")
+    with patch('anthropic.Anthropic'):
+        config = factory.ModelConfig(
+            model_id=_example_id(PATTERNS[0]) if PATTERNS else "test-model",
+            provider="AnthropicLanguageModel",
+        )
+        model = factory.create_model(config)
+        print(f"   ✓ Factory created: {type(model).__name__}")
 except Exception as e:
     print(f"   ✗ ERROR: {e}")
 

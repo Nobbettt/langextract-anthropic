@@ -35,7 +35,7 @@ jobs:
         uv run isort --check-only .
     
     - name: Run type checking
-      run: uv run mypy langextract_azureopenai
+      run: uv run mypy langextract_anthropic
     
     - name: Run unit tests
       run: uv run pytest tests/test_provider_unit.py -v
@@ -44,7 +44,7 @@ jobs:
       run: uv run python tests/test_parameter_filtering.py
     
     - name: Run tests with coverage
-      run: uv run pytest tests/ --cov=langextract_azureopenai --cov-report=xml
+      run: uv run pytest tests/ --cov=langextract_anthropic --cov-report=xml
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -97,14 +97,13 @@ jobs:
     - name: Install dependencies
       run: uv sync --dev
     
-    - name: Run Azure OpenAI integration tests
+    - name: Run Anthropic integration tests
       env:
-        AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-        AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       run: |
-        if [ -n "$AZURE_OPENAI_API_KEY" ] && [ -n "$AZURE_OPENAI_ENDPOINT" ]; then
-          echo "Running integration tests with Azure OpenAI"
-          uv run python tests/test_azure_parameters.py
+        if [ -n "$ANTHROPIC_API_KEY" ]; then
+          echo "Running integration tests with Anthropic API"
+          uv run python tests/test_anthropic_parameters.py
         else
-          echo "Skipping integration tests - no Azure credentials"
+          echo "Skipping integration tests - no Anthropic API key"
         fi

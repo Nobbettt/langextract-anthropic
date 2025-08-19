@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Simple test for the Azure OpenAI provider plugin."""
+"""Simple test for the Anthropic provider plugin."""
 
 import os
 
@@ -22,12 +22,12 @@ import langextract as lx
 # Import the provider to trigger registration with LangExtract
 # Note: This manual import is only needed when running without installation.
 # After `pip install -e .`, the entry point system handles this automatically.
-from langextract_azureopenai import AzureOpenAILanguageModel  # noqa: F401
+from langextract_anthropic import AnthropicLanguageModel  # noqa: F401
 
 
 def main():
-    """Test the Azure OpenAI provider."""
-    api_key = os.getenv("AZURE_OPENAI_API_KEY") or os.getenv("LANGEXTRACT_API_KEY")
+    """Test the Anthropic provider."""
+    api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("LANGEXTRACT_API_KEY")
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
     api_version = os.getenv("AZURE_OPENAI_API_VERSION")
 

@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "langextract-azureopenai"
-version = "0.1.5"
-description = "LangExtract provider plugin for Azure OpenAI"
+name = "langextract-anthropic"
+version = "0.1.0"
+description = "LangExtract provider plugin for Anthropic Claude"
 readme = "README.md"
 license = "Apache-2.0"
 authors = [
@@ -16,8 +16,8 @@ maintainers = [
 ]
 keywords = [
     "langextract",
-    "azure-openai", 
-    "openai",
+    "anthropic", 
+    "claude",
     "llm",
     "provider",
     "plugin",
@@ -41,7 +41,7 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
     "langextract>=1.0.0",
-    "openai>=1.0.0",
+    "anthropic>=0.34.0",
 ]
 
 [project.optional-dependencies]
@@ -76,15 +76,15 @@ Repository = "https://github.com/google/langextract"
 Changelog = "https://github.com/google/langextract/releases"
 
 [project.entry-points."langextract.providers"]
-azureopenai = "langextract_azureopenai.provider:AzureOpenAILanguageModel"
+anthropic = "langextract_anthropic.provider:AnthropicLanguageModel"
 
 # Hatchling configuration
 [tool.hatch.build.targets.wheel]
-packages = ["langextract_azureopenai"]
+packages = ["langextract_anthropic"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "/langextract_azureopenai",
+    "/langextract_anthropic",
     "/README.md",
     "/LICENSE", 
     "/TESTING.md",
@@ -97,14 +97,14 @@ exclude = [
     "__pycache__",
     "*.pyc",
     "*.pyo",
-    "azure_*.jsonl",
-    "azure_*.html",
+    "anthropic_*.jsonl",
+    "anthropic_*.html",
     "test_*.py",
     "example_*.py",
 ]
 
 [tool.hatch.version]
-path = "langextract_azureopenai/__init__.py"
+path = "langextract_anthropic/__init__.py"
 
 # Development tools configuration
 [tool.ruff]
@@ -140,7 +140,7 @@ skip-string-normalization = true
 profile = "black"
 multi_line_output = 3
 line_length = 88
-known_first_party = ["langextract_azureopenai"]
+known_first_party = ["langextract_anthropic"]
 
 [tool.mypy]
 python_version = "3.10"
@@ -162,7 +162,7 @@ module = "tests.*"
 disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "langextract_azureopenai"]
+testpaths = ["tests", "langextract_anthropic"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -177,4 +177,4 @@ markers = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["langextract_azureopenai"]
+known-first-party = ["langextract_anthropic"]
